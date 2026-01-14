@@ -1,0 +1,29 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity sseg_yn is
+    port(
+        bcd_code : in  std_logic_vector(3 downto 0);   -- from ALU3: 0000='n', 1111='y'
+        segments : out std_logic_vector(6 downto 0)    -- a..g (active-low example)
+    );
+end sseg_yn;
+
+architecture Behavior of sseg_yn is
+begin
+    process(bcd_code)
+    begin
+        -- bcd_code: 0000 => 'n', 1111 => 'y'
+        if bcd_code = "0000" then
+            -- pattern_for_n (active-low, change if your board is different)
+            segments <= "1010000";   -- example: shows 'n'
+
+        elsif bcd_code = "1111" then
+            -- pattern_for_y
+            segments <= "1000100";   -- example: shows 'Y'
+
+        else
+            -- Unknown / unused pattern ? blank
+            segments <= "1111111";
+        end if;
+    end process;
+end Behavior;
