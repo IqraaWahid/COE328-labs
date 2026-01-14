@@ -1,0 +1,31 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+
+ENTITY C IS
+    PORT (
+            S : IN STD_LOGIC_VECTOR(3 DOWNTO 0); -- input
+            L : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)); --output
+END C;
+
+ARCHITECTURE Behaviour OF C IS
+BEGIN
+    PROCESS (S) -- process triggered by the input vector S[3,0] output of ASU
+    BEGIN --assigning the simplified Boolean expressions to L(3), L(2), L(1), L(0), inside the archietecture process
+       -- L3 = s1 s2' s3'
+		 L(3) <= ( S(1) and (not S(2)) and (not S(3)) );
+
+		 -- L2 = (s0' s1' s2' s3') + (s1 s2' s3) + (s1 s2 s3')
+		 L(2) <= ( (not S(0)) and (not S(1)) and (not S(2)) and (not S(3)) )
+					or ( S(1) and (not S(2)) and S(3) )
+					or ( S(1) and S(2) and (not S(3)) );
+
+		 -- L1 = (s1 s2' s3) + (s1' s2 s3)
+		 L(1) <= ( S(1) and (not S(2)) and S(3) )
+					or ( (not S(1)) and S(2) and S(3) );
+
+		 -- L0 = (s0' s1' s2') + (s1 s3)
+		 L(0) <= ( (not S(0)) and (not S(1)) and (not S(2)) )
+					or ( S(1) and S(3) );
+    END PROCESS;
+END Behaviour;

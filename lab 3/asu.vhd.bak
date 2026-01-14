@@ -1,0 +1,33 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_signed.all;
+
+ENTITY asu IS
+    PORT (
+        Cin  : IN  STD_LOGIC;                        -- 0 = Add, 1 = Subtract
+        A, B : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
+        O    : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);    -- Output (Sum/Difference)
+        neg, Cout, Overflow : OUT STD_LOGIC
+    );
+END asu;
+
+ARCHITECTURE Behavior OF asu IS
+    SIGNAL B_eff : STD_LOGIC_VECTOR(3 DOWNTO 0);
+    SIGNAL Sum   : STD_LOGIC_VECTOR(4 DOWNTO 0);
+    SIGNAL O_int : STD_LOGIC_VECTOR(3 DOWNTO 0);    -- internal version of O
+BEGIN
+    -- Invert B when Cin = 1 (for subtraction)
+    B_eff <= B XOR (Cin & Cin & Cin & Cin);
+
+    -- Perform addition/subtraction
+    Sum <= ('0' & A) + ('0' & B_eff) + Cin;
+
+    -- Assign internal signals
+    O_int <= Sum(3 DOWNTO 0);
+    O     <= O_int;
+    Cout  <= Sum(4);
+
+    -- Use internal O for neg since OUT can't be read
+    neg     <= O_int(3);  -- sign bit for display
+    Overflow <= Sum(4) XOR Sum(3) XOR A(3) XOR B_eff(3);
+END Behavior;
