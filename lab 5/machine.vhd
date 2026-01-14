@@ -1,0 +1,192 @@
+library ieee;
+use ieee.std_logic_1164.all;
+entity machine is
+    port
+    (
+        clk          : in  std_logic;
+        data_in      : in  std_logic; -- primary input (w)
+        reset        : in  std_logic;
+        student_id   : out std_logic_vector(3 downto 0);
+        current_state: out std_logic_vector(3 DOWNTO 0) -- 0000 for S0, 0001 for S8
+    );
+end entity;
+
+architecture fsm of machine is
+    -- Build an enumerated type with 9 states for 
+    -- the state machine (9 states for parsing 9 digits of student id)
+    type state_type is (s0, s1, s2, s3, s4, s5, s6, s7, s8);
+    -- Register to hold the current state
+    signal yfsm : state_type;
+begin
+    process (clk, reset)
+    begin
+        if reset = '1' then -- when reset is 1, the FSM goes back to S0
+            yfsm <= s0;
+        elsif (clk'EVENT AND clk = '1') then -- on each clock rising edge
+            -- Determine the next state synchronously, based on
+            -- the current state and the input
+            case yfsm is
+					 -- S0 : 0000
+                when s0 =>
+                    if data_in = '0' then
+                        yfsm <= s0;  -- 0000
+                    else
+                        yfsm <= s8;  -- 1000
+                    end if;
+
+                -- S8 : 1000
+                when s8 =>
+                    if data_in = '0' then
+                        yfsm <= s8;  -- 1000
+                    else
+                        yfsm <= s4;  -- 0100
+                    end if;
+
+                -- S4 : 0100
+                when s4 =>
+                    if data_in = '0' then
+                        yfsm <= s4;  -- 0100
+                    else
+                        yfsm <= s1;  -- 0001
+                    end if;
+
+                -- S1 : 0001
+                when s1 =>
+                    if data_in = '0' then
+                        yfsm <= s1;  -- 0001
+                    else
+                        yfsm <= s5;  -- 0101
+                    end if;
+
+                -- S5 : 0101
+                when s5 =>
+                    if data_in = '0' then
+                        yfsm <= s5;  -- 0101
+                    else
+                        yfsm <= s7;  -- 0111
+                    end if;
+
+                -- S7 : 0111
+                when s7 =>
+                    if data_in = '0' then
+                        yfsm <= s7;  -- 0111
+                    else
+                        yfsm <= s3;  -- 0011
+                    end if;
+
+                -- S3 : 0011
+                when s3 =>
+                    if data_in = '0' then
+                        yfsm <= s3;  -- 0011
+                    else
+                        yfsm <= s2;  -- 0010
+                    end if;
+
+                -- S2 : 0010
+                when s2 =>
+                    if data_in = '0' then
+                        yfsm <= s2;  -- 0010
+                    else
+                        yfsm <= s6;  -- 0110
+                    end if;
+
+                -- S6 : 0110
+                when s6 =>
+                    if data_in = '0' then
+                        yfsm <= s6;  -- 0110
+                    else
+                        yfsm <= s0;  -- 0000
+                    end if;
+						  
+            end case;
+        end if;
+    end process;
+
+    -- Implement the Mealy logic here
+    process (yfsm, data_in)  -- data_in if reqd only
+    begin
+        case yfsm is
+			  -- s0 : Q=0000  z(w=0)=0101(5)  z(w=1)=0000(0)
+            when s0 =>
+                current_state <= "0000";
+                if data_in = '0' then
+                    student_id <= "0101"; -- 5
+                else
+                    student_id <= "0000"; -- 0
+                end if;
+
+            -- s8 : Q=1000  z(w=0)=0000(0)  z(w=1)=0001(1)
+            when s8 =>
+                current_state <= "1000";
+                if data_in = '0' then
+                    student_id <= "0000"; -- 0
+                else
+                    student_id <= "0001"; -- 1
+                end if;
+
+            -- s4 : Q=0100  z(w=0)=0001(1)  z(w=1)=0010(2)
+            when s4 =>
+                current_state <= "0100";
+                if data_in = '0' then
+                    student_id <= "0001"; -- 1
+                else
+                    student_id <= "0010"; -- 2
+                end if;
+
+            -- s1 : Q=0001  z(w=0)=0010(2)  z(w=1)=1000(8)
+            when s1 =>
+                current_state <= "0001";
+                if data_in = '0' then
+                    student_id <= "0010"; -- 2
+                else
+                    student_id <= "1000"; -- 8
+                end if;
+
+            -- s5 : Q=0101  z(w=0)=1000(8)  z(w=1)=0111(7)
+            when s5 =>
+                current_state <= "0101";
+                if data_in = '0' then
+                    student_id <= "1000"; -- 8
+                else
+                    student_id <= "0111"; -- 7
+                end if;
+
+            -- s7 : Q=0111  z(w=0)=0111(7)  z(w=1)=0100(4)
+            when s7 =>
+                current_state <= "0111";
+                if data_in = '0' then
+                    student_id <= "0111"; -- 7
+                else
+                    student_id <= "0100"; -- 4
+                end if;
+
+            -- s3 : Q=0011  z(w=0)=0100(4)  z(w=1)=0001(1)
+            when s3 =>
+                current_state <= "0011";
+                if data_in = '0' then
+                    student_id <= "0100"; -- 4
+                else
+                    student_id <= "0001"; -- 1
+                end if;
+
+            -- s2 : Q=0010  z(w=0)=0001(1)  z(w=1)=0000(0)
+            when s2 =>
+                current_state <= "0010";
+                if data_in = '0' then
+                    student_id <= "0001"; -- 1
+                else
+                    student_id <= "0000"; -- 0
+                end if;
+
+            -- s6 : Q=0110  z(w=0)=0000(0)  z(w=1)=0101(5)
+            when s6 =>
+                current_state <= "0110";
+                if data_in = '0' then
+                    student_id <= "0000"; -- 0
+                else
+                    student_id <= "0101"; -- 5
+                end if;
+					 
+		   end case;
+    end process;
+end fsm;
